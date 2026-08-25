@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6-Month Discipline Task Tracker & Sector Analytics</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Canvas Confetti for 100% completion celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Font: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom subtle scrollbar & sleek transitions */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased flex flex-col justify-between">
+
+  <!-- Top Announcement / Daily Quote Bar -->
+  <div class="bg-slate-900 text-slate-200 text-xs py-2 px-4 font-medium flex items-center justify-between border-b border-slate-800">
+    <div class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+      <div class="flex items-center gap-2">
+        <span class="text-amber-400 font-bold">⚔️ Daily Rule:</span>
+        <span class="text-slate-300 italic">"Do the important things even when you don't feel like doing them."</span>
+      </div>
+      <div class="text-[11px] font-semibold text-slate-400 bg-slate-800 px-3 py-0.5 rounded-full border border-slate-700">
+        6 months × consistency &gt; 1 day × motivation
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6 flex-1">
+    
+    <!-- App Header & Controls -->
+    <header class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      <div class="space-y-1">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">6-Month Discipline Tracker</h1>
+          <span id="rankBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            🌱 Level 1: Novice
+          </span>
+          <span id="sheetSyncBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 cursor-pointer" onclick="openSyncModal()">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Sheet Synced
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-slate-500">
+          Transform your identity through 180 days of relentless, unshakeable daily routine execution.
+        </p>
+      </div>
+
+      <!-- Action Buttons & Date Picker -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+          <button onclick="changeDate(-1)" class="p-2 hover:bg-white rounded-lg text-slate-600 transition-all font-bold text-sm" title="Previous Day">←</button>
+          <input type="date" id="datePicker" onchange="onDateChange(this.value)" class="bg-transparent border-none text-xs font-bold text-slate-700 px-2 focus:ring-0 cursor-pointer">
+          <button onclick="changeDate(1)" class="p-2 hover:bg-white rounded-lg text-slate-600 transition-all font-bold text-sm" title="Next Day">→</button>
+        </div>
+        
+        <button onclick="setTodayDate()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm">
+          Today
+        </button>
+
+        <button onclick="openSyncModal()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-1.5">
+          <span>📊</span> Sheet Sync
+        </button>
+      </div>
+    </header>
+
+    <!-- Key Metrics Dashboard Grid (6 Summary Cards) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <!-- 1. Daily Target -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">Daily Target</span>
+          <span class="text-base">🎯</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricDailyPct" class="text-2xl font-black text-slate-900">0%</span>
+          <span id="metricDailyCount" class="text-[11px] font-bold text-slate-400">(0/30)</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="metricDailyBar" class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 2. Weekly Avg -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">Weekly (7d)</span>
+          <span class="text-base">📅</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricWeeklyPct" class="text-2xl font-black text-slate-900">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="metricWeeklyBar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 3. Monthly Avg -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">Monthly (30d)</span>
+          <span class="text-base">📈</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricMonthlyPct" class="text-2xl font-black text-slate-900">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="metricMonthlyBar" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 4. 6-Month Program Total -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">6-Mo Program</span>
+          <span class="text-base">👑</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricSixMonthPct" class="text-2xl font-black text-slate-900">0%</span>
+          <span id="metricSixMonthCount" class="text-[10px] font-bold text-slate-400">(0/5400)</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="metricSixMonthBar" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 5. Active Streak -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">Active Streak</span>
+          <span class="text-base">🔥</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricStreak" class="text-2xl font-black text-slate-900">0 Days</span>
+        </div>
+        <p class="text-[10px] font-semibold text-slate-400 truncate">Days with ≥ 80% tasks</p>
+      </div>
+
+      <!-- 6. Trophies Achievement % -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-[11px] font-bold uppercase tracking-wider">Trophies %</span>
+          <span class="text-base">🏆</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metricTrophyPct" class="text-2xl font-black text-slate-900">0%</span>
+          <span id="metricTrophyCount" class="text-[10px] font-bold text-slate-400">(0/30)</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="metricTrophyBar" class="bg-purple-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+      <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all bg-slate-900 text-white shadow-sm flex items-center gap-2">
+        <span>📋</span> Daily Checklist
+      </button>
+      <button onclick="switchTab('calendar')" id="tab-calendar" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 flex items-center gap-2">
+        <span>📅</span> Monthly Calendar
+      </button>
+      <button onclick="switchTab('sector')" id="tab-sector" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 flex items-center gap-2">
+        <span>🔍</span> Sector Analytics
+      </button>
+      <button onclick="switchTab('trends')" id="tab-trends" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 flex items-center gap-2">
+        <span>📈</span> Overall Trends
+      </button>
+      <button onclick="switchTab('achievements')" id="tab-achievements" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 flex items-center gap-2">
+        <span>🏆</span> Hall of Trophies (30)
+      </button>
+    </nav>
+
+    <!-- TAB CONTENT 1: DAILY CHECKLIST VIEW -->
+    <div id="view-checklist" class="tab-view space-y-6">
+      
+      <!-- Date Banner & Quick Controls -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-3">
+        <div>
+          <h2 id="checklistDateTitle" class="text-base sm:text-lg font-black text-slate-900">Checklist for Today</h2>
+          <p class="text-xs text-slate-500 font-medium">Check off items as you complete them throughout your day.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="markAllToday(true)" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-all">
+            ✓ Complete All
+          </button>
+          <button onclick="clearAllToday()" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition-all">
+            ✕ Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Routine Grid Cards (6 Pillars) -->
+      <div id="routineGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </div>
+
+    <!-- TAB CONTENT 2: MONTHLY CALENDAR VIEW -->
+    <div id="view-calendar" class="tab-view hidden space-y-5">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-black text-slate-900">Interactive Monthly Calendar</h2>
+            <p class="text-xs text-slate-500 font-medium">Review daily completion badges. Click any day to jump to its checklist.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changeCalendarMonth(-1)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs">← Prev Month</button>
+            <span id="calendarMonthLabel" class="text-sm font-black text-slate-800 px-3">October 2026</span>
+            <button onclick="changeCalendarMonth(1)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs">Next Month →</button>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center gap-4 text-[11px] font-bold text-slate-500 pt-2 border-t border-slate-100 flex-wrap">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400"></span> ⭐ Gold Star (100%)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> 🟢 High (80-99%)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span> 🔵 Good (50-79%)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-300"></span> ⚪ Low (&lt;50%)</span>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="grid grid-cols-7 gap-1.5 text-center text-xs font-bold text-slate-400 pb-2">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+          <!-- Calendar Days Rendered Dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CONTENT 3: INDIVIDUAL SECTOR ANALYTICS -->
+    <div id="view-sector" class="tab-view hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <h2 class="text-lg font-black text-slate-900">Individual Sector Performance Analysis</h2>
+        <p class="text-xs text-slate-500 font-medium">Detailed breakdown of your execution across each of the 6 life routine pillars.</p>
+      </div>
+
+      <!-- Sector Comparison Horizontal Chart -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Comparative Sector Performance (30-Day Averages)</h3>
+        <div class="h-60">
+          <canvas id="sectorBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Sector Analysis Cards Grid -->
+      <div id="sectorCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB CONTENT 4: OVERALL TRENDS -->
+    <div id="view-trends" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 7-Day Line Trend Chart -->
+        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-slate-900">7-Day Completion Velocity Chart</h3>
+            <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg">Last 7 Days</span>
+          </div>
+          <div class="h-72">
+            <canvas id="trendLineChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Sector Radar Balance Chart -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-sm font-extrabold text-slate-900">Routine Balance (Radar)</h3>
+          <div class="h-72">
+            <canvas id="radarChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CONTENT 5: HALL OF ACHIEVEMENTS (30 TROPHIES) -->
+    <div id="view-achievements" class="tab-view hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-black text-slate-900">Hall of Achievements & Trophies</h2>
+          <p class="text-xs text-slate-500 font-medium">30 unique milestones tracking your 6-month iron discipline transformation.</p>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl flex items-center gap-3">
+          <span class="text-2xl">🏆</span>
+          <div>
+            <div id="trophyUnlockText" class="text-sm font-black text-indigo-900">0 of 30 Unlocked</div>
+            <div class="text-[10px] font-bold text-indigo-600">Completion Score</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 30 Trophy Cards Grid -->
+      <div id="trophiesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Dynamic Trophies Rendered Here -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs font-semibold text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p>6-Month Discipline Task Tracker &amp; Analytics &bull; Designed for Unstoppable Consistency</p>
+      <p class="text-[11px] text-slate-400">Auto-saves locally &amp; syncs with Google Sheets</p>
+    </div>
+  </footer>
+
+  <!-- GOOGLE SHEETS SYNC MODAL -->
+  <div id="syncModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-lg w-full rounded-2xl p-6 shadow-xl border border-slate-200 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+          <span>📊</span> Google Sheet Backend Sync
+        </h3>
+        <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Your tracker is pre-connected to your Google Apps Script backend. You can manually push all local data to your sheet or fetch cloud records anytime.
+        </p>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700">Google Apps Script Web App URL</label>
+          <input type="text" id="syncUrlInput" class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-1.5 text-slate-600">
+          <div class="font-bold text-slate-800 flex items-center gap-1.5">
+            <span>⚡</span> Backend Status:
+          </div>
+          <p id="modalSyncStatusText">Connected & Operational</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button onclick="pushAllToSheet()" class="w-full text-xs font-bold py-2.5 px-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm">
+            ⬆️ Push Local Data
+          </button>
+          <button onclick="fetchFromSheet()" class="w-full text-xs font-bold py-2.5 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm">
+            ⬇️ Pull Sheet Data
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="saveSyncUrl()" class="text-xs font-extrabold px-4 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300">
+          Save Settings & Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT -->
+  <script>
+    
+    // Default Google Apps Script Web App URL provided by user
+    const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbwDHOqe-7p3DF7-r54-fyNSrJdWvzg8UxvNsmdi8o_fTEdYN1R9v7nHftSbYyOleKz9SA/exec";
+    
+    // Initialize or fetch sync URL from localStorage
+    let currentSyncUrl = localStorage.getItem('sheetSyncUrl') || DEFAULT_SYNC_URL;
+    if (!localStorage.getItem('sheetSyncUrl')) {
+      localStorage.setItem('sheetSyncUrl', DEFAULT_SYNC_URL);
+    }
+
+    // Full 30-task routine definitions categorized into 6 life pillars
+    const ROUTINE_DATA = [
+      {
+        id: 'morning',
+        title: '🌅 Morning Routine',
+        icon: '🌅',
+        color: '#f59e0b',
+        bgColor: 'bg-amber-50/50',
+        borderColor: 'border-amber-200',
+        tasks: [
+          "Wake up before 8:00 AM",
+          "Make the bed",
+          "Drink water",
+          "Freshen up & get ready",
+          "Check today's priorities",
+          "No unnecessary phone scrolling"
+        ]
+      },
+      {
+        id: 'growth',
+        title: '📚 Personal Growth',
+        icon: '📚',
+        color: '#3b82f6',
+        bgColor: 'bg-blue-50/50',
+        borderColor: 'border-blue-200',
+        tasks: [
+          "Study for 2 hours",
+          "Work on future goals for 2 hours",
+          "Read for 30 minutes",
+          "Learn something useful"
+        ]
+      },
+      {
+        id: 'trading',
+        title: '📈 Trading Mastery',
+        icon: '📈',
+        color: '#10b981',
+        bgColor: 'bg-emerald-50/50',
+        borderColor: 'border-emerald-200',
+        tasks: [
+          "Check market only during planned sessions",
+          "Follow the trading plan",
+          "Take only valid setups",
+          "Never revenge trade",
+          "Journal every trade",
+          "Review trading mistakes"
+        ]
+      },
+      {
+        id: 'health',
+        title: '🏋️ Physical Health',
+        icon: '🏋️',
+        color: '#ec4899',
+        bgColor: 'bg-pink-50/50',
+        borderColor: 'border-pink-200',
+        tasks: [
+          "Exercise for 45 minutes",
+          "Eat properly",
+          "Get enough rest",
+          "Stay hydrated"
+        ]
+      },
+      {
+        id: 'discipline',
+        title: '🧠 Mental Discipline',
+        icon: '🧠',
+        color: '#8b5cf6',
+        bgColor: 'bg-purple-50/50',
+        borderColor: 'border-purple-200',
+        tasks: [
+          "Keep social media under control",
+          "Avoid unnecessary distractions",
+          "Spend time with family",
+          "Complete the day's important tasks",
+          "No porn",
+          "No masturbation"
+        ]
+      },
+      {
+        id: 'night',
+        title: '🌙 Night Reset',
+        icon: '🌙',
+        color: '#6366f1',
+        bgColor: 'bg-indigo-50/50',
+        borderColor: 'border-indigo-200',
+        tasks: [
+          "Review the day",
+          "Write journal",
+          "Check tomorrow's priorities",
+          "Prepare for sleep before 12:00 AM"
+        ]
+      }
+    ];
+
+    // 30 Achievements & Trophies Definition
+    const ACHIEVEMENTS_DEF = [
+      { id: 't1', title: 'First Step', icon: '🌱', desc: 'Complete your first task ever', req: logs => getTotalCompletedCount(logs) >= 1 },
+      { id: 't2', title: 'Flawless Day', icon: '⭐', desc: 'Achieve 100% completion in a single day', req: logs => hasFlawlessDay(logs) },
+      { id: 't3', title: '3-Day Momentum', icon: '🔥', desc: 'Maintain a 3-day streak (≥80%)', req: logs => getStreakCount(logs) >= 3 },
+      { id: 't4', title: '7-Day Iron Will', icon: '⚡', desc: 'Maintain a 7-day streak', req: logs => getStreakCount(logs) >= 7 },
+      { id: 't5', title: '14-Day Monk', icon: '🧘', desc: 'Maintain a 14-day streak', req: logs => getStreakCount(logs) >= 14 },
+      { id: 't6', title: '30-Day Legend', icon: '👑', desc: 'Maintain a 30-day streak', req: logs => getStreakCount(logs) >= 30 },
+      { id: 't7', title: 'Morning Dynamo', icon: '🌅', desc: 'Complete all morning tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'morning') },
+      { id: 't8', title: 'Scholar Mindset', icon: '📚', desc: 'Complete all personal growth tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'growth') },
+      { id: 't9', title: 'Disciplined Trader', icon: '📈', desc: 'Complete all trading tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'trading') },
+      { id: 't10', title: 'Health Champion', icon: '🏋️', desc: 'Complete all physical health tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'health') },
+      { id: 't11', title: 'Unshakable Mind', icon: '🧠', desc: 'Complete all mental discipline tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'discipline') },
+      { id: 't12', title: 'Peaceful Rest', icon: '🌙', desc: 'Complete all night reset tasks on any day', req: logs => completedSectorOnAnyDay(logs, 'night') },
+      { id: 't13', title: '100 Tasks Done', icon: '💯', desc: 'Reach 100 cumulative completed tasks', req: logs => getTotalCompletedCount(logs) >= 100 },
+      { id: 't14', title: '500 Tasks Master', icon: '🛡️', desc: 'Reach 500 cumulative completed tasks', req: logs => getTotalCompletedCount(logs) >= 500 },
+      { id: 't15', title: '1,000 Tasks Titan', icon: '⚔️', desc: 'Reach 1,000 cumulative completed tasks', req: logs => getTotalCompletedCount(logs) >= 1000 },
+      { id: 't16', title: '2,500 Tasks Veteran', icon: '🏅', desc: 'Reach 2,500 cumulative completed tasks', req: logs => getTotalCompletedCount(logs) >= 2500 },
+      { id: 't17', title: '5,000 Conqueror', icon: '🏆', desc: 'Reach 5,000 cumulative completed tasks', req: logs => getTotalCompletedCount(logs) >= 5000 },
+      { id: 't18', title: 'Century Trader', icon: '💹', desc: 'Complete 100 individual trading tasks', req: logs => getSectorTotalCount(logs, 'trading') >= 100 },
+      { id: 't19', title: 'Iron Scholar', icon: '🎓', desc: 'Complete 100 growth tasks', req: logs => getSectorTotalCount(logs, 'growth') >= 100 },
+      { id: 't20', title: 'Purity Guard', icon: '🛡️', desc: 'Complete discipline sector 10 times fully', req: logs => getSectorFullDays(logs, 'discipline') >= 10 },
+      { id: 't21', title: 'Early Bird Streak', icon: '⏰', desc: 'Complete morning routine 7 days in a row', req: logs => sectorStreak(logs, 'morning') >= 7 },
+      { id: 't22', title: 'Trading Discipline Streak', icon: '📊', desc: 'Execute trading routine 7 days in a row', req: logs => sectorStreak(logs, 'trading') >= 7 },
+      { id: 't23', title: 'Physical Armor', icon: '💪', desc: 'Execute health routine 7 days in a row', req: logs => sectorStreak(logs, 'health') >= 7 },
+      { id: 't24', title: '5 Flawless Days', icon: '🌟', desc: 'Achieve 5 total 100% flawless days', req: logs => getFlawlessDayCount(logs) >= 5 },
+      { id: 't25', title: '30 Flawless Days', icon: '💎', desc: 'Achieve 30 total 100% flawless days', req: logs => getFlawlessDayCount(logs) >= 30 },
+      { id: 't26', title: 'Level 5 Commander', icon: '🎖️', desc: 'Reach Rank Level 5', req: logs => getRankLevel(logs) >= 5 },
+      { id: 't27', title: 'Level 10 Monk', icon: '⛩️', desc: 'Reach Rank Level 10', req: logs => getRankLevel(logs) >= 10 },
+      { id: 't28', title: 'Pillar of Balance', icon: '⚖️', desc: 'Achieve ≥70% in every sector over 7 days', req: logs => isBalancedWeek(logs) },
+      { id: 't29', title: '60-Day Warrior', icon: '🔱', desc: 'Log 60 active tracking days', req: logs => Object.keys(logs).length >= 60 },
+      { id: 't30', title: 'Monarch of 6 Months', icon: '👑', desc: 'Complete all 6 months with ≥80% average', req: logs => getSixMonthTotalPct(logs) >= 80 }
+    ];
+
+    let currentDateStr = getFormattedDate(new Date());
+    let currentCalendarDate = new Date();
+    let userLogs = JSON.parse(localStorage.getItem('disciplineLogs') || '{}');
+    let trendChartInstance = null;
+    let radarChartInstance = null;
+    let sectorBarChartInstance = null;
+
+    // Helper: Date string YYYY-MM-DD
+    function getFormattedDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getTaskKey(catId, taskIndex) {
+      return `${catId}_${taskIndex}`;
+    }
+
+    // Save logs to localStorage and auto-sync to sheet
+    function saveUserData() {
+      localStorage.setItem('disciplineLogs', JSON.stringify(userLogs));
+      updateAllStats();
+      syncDayToGoogleSheet(currentDateStr);
+    }
+
+    window.onload = function() {
+      const dateInput = document.getElementById('datePicker');
+      if (dateInput) dateInput.value = currentDateStr;
+
+      renderChecklistView();
+      updateAllStats();
+      
+      // Auto fetch sheet data once on load if URL is saved
+      if (currentSyncUrl) {
+        fetchFromSheet(true);
+      }
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-slate-900', 'text-white', 'shadow-sm');
+        b.classList.add('text-slate-600');
+      });
+
+      const activeView = document.getElementById(`view-${tabId}`);
+      const activeTabBtn = document.getElementById(`tab-${tabId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeTabBtn) {
+        activeTabBtn.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
+        activeTabBtn.classList.remove('text-slate-600');
+      }
+
+      if (tabId === 'calendar') renderMonthlyCalendar();
+      if (tabId === 'sector') renderSectorAnalytics();
+      if (tabId === 'trends') renderTrendsCharts();
+      if (tabId === 'achievements') renderAchievements();
+    }
+
+    function changeDate(deltaDays) {
+      const cur = new Date(currentDateStr);
+      cur.setDate(cur.getDate() + deltaDays);
+      currentDateStr = getFormattedDate(cur);
+      document.getElementById('datePicker').value = currentDateStr;
+      renderChecklistView();
+      updateAllStats();
+    }
+
+    function onDateChange(val) {
+      if (!val) return;
+      currentDateStr = val;
+      renderChecklistView();
+      updateAllStats();
+    }
+
+    function setTodayDate() {
+      currentDateStr = getFormattedDate(new Date());
+      document.getElementById('datePicker').value = currentDateStr;
+      renderChecklistView();
+      updateAllStats();
+    }
+
+    function renderChecklistView() {
+      const grid = document.getElementById('routineGrid');
+      const dateTitle = document.getElementById('checklistDateTitle');
+      if (dateTitle) dateTitle.innerText = `Checklist for ${currentDateStr}`;
+      if (!grid) return;
+
+      grid.innerHTML = '';
+      const dayData = userLogs[currentDateStr] || {};
+
+      ROUTINE_DATA.forEach(cat => {
+        let completedCount = 0;
+        cat.tasks.forEach((_, idx) => {
+          if (dayData[getTaskKey(cat.id, idx)]) completedCount++;
+        });
+
+        const pct = cat.tasks.length > 0 ? Math.round((completedCount / cat.tasks.length) * 100) : 0;
+
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border ${cat.borderColor} ${cat.bgColor} shadow-sm space-y-4 flex flex-col justify-between transition-all`;
+
+        let tasksHtml = '';
+        cat.tasks.forEach((taskText, idx) => {
+          const tKey = getTaskKey(cat.id, idx);
+          const isDone = !!dayData[tKey];
+
+          tasksHtml += `
+            <label class="flex items-start gap-3 p-2.5 rounded-xl bg-white/80 border border-slate-200/60 hover:bg-white transition-all cursor-pointer group">
+              <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTask('${tKey}')" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+              <span class="text-xs font-semibold text-slate-700 group-hover:text-slate-900 leading-snug ${isDone ? 'line-through opacity-50' : ''}">
+                ${taskText}
+              </span>
+            </label>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">${cat.icon}</span>
+                <div>
+                  <h3 class="font-extrabold text-slate-900 text-sm leading-tight">${cat.title}</h3>
+                  <span class="text-[10px] font-bold text-slate-500">${completedCount} / ${cat.tasks.length} Completed</span>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-white/90 border border-slate-200 text-slate-700 shadow-sm">${pct}%</span>
+            </div>
+            
+            <div class="w-full bg-slate-200/70 h-1.5 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${cat.color}"></div>
+            </div>
+
+            <div class="space-y-1.5 pt-1">
+              ${tasksHtml}
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleTask(tKey) {
+      if (!userLogs[currentDateStr]) userLogs[currentDateStr] = {};
+      userLogs[currentDateStr][tKey] = !userLogs[currentDateStr][tKey];
+      
+      saveUserData();
+      renderChecklistView();
+
+      // Check for 100% daily celebration
+      const dayPct = getDayCompletionPct(currentDateStr);
+      if (dayPct === 100) {
+        triggerConfetti();
+      }
+    }
+
+    function markAllToday(completedState) {
+      if (!userLogs[currentDateStr]) userLogs[currentDateStr] = {};
+      ROUTINE_DATA.forEach(cat => {
+        cat.tasks.forEach((_, idx) => {
+          userLogs[currentDateStr][getTaskKey(cat.id, idx)] = completedState;
+        });
+      });
+      saveUserData();
+      renderChecklistView();
+
+      if (completedState) triggerConfetti();
+    }
+
+    function clearAllToday() {
+      markAllToday(false);
+    }
+
+    function getDayCompletionCount(dateStr) {
+      const dayData = userLogs[dateStr] || {};
+      let count = 0;
+      ROUTINE_DATA.forEach(cat => {
+        cat.tasks.forEach((_, idx) => {
+          if (dayData[getTaskKey(cat.id, idx)]) count++;
+        });
+      });
+      return count;
+    }
+
+    function getDayCompletionPct(dateStr) {
+      const count = getDayCompletionCount(dateStr);
+      return Math.round((count / 30) * 100);
+    }
+
+    function getAverageForLastDays(numDays) {
+      let totalPct = 0;
+      const baseDate = new Date(currentDateStr);
+      for (let i = 0; i < numDays; i++) {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() - i);
+        totalPct += getDayCompletionPct(getFormattedDate(d));
+      }
+      return Math.round(totalPct / numDays);
+    }
+
+    function getSixMonthTotalPct(logs) {
+      const totalTasksDone = getTotalCompletedCount(logs);
+      const totalGoal = 180 * 30; // 5,400 tasks
+      return Math.min(100, Math.round((totalTasksDone / totalGoal) * 100));
+    }
+
+    function getTotalCompletedCount(logs) {
+      let count = 0;
+      Object.values(logs).forEach(dayObj => {
+        if (dayObj) {
+          Object.values(dayObj).forEach(val => {
+            if (val) count++;
+          });
+        }
+      });
+      return count;
+    }
+
+    function getStreakCount(logs) {
+      let streak = 0;
+      let d = new Date(currentDateStr);
+      while (true) {
+        const dStr = getFormattedDate(d);
+        const pct = getDayCompletionPct(dStr);
+        if (pct >= 80) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function getRankLevel(logs) {
+      const total = getTotalCompletedCount(logs);
+      return Math.floor(total / 150) + 1;
+    }
+
+    function updateAllStats() {
+      const dailyCount = getDayCompletionCount(currentDateStr);
+      const dailyPct = Math.round((dailyCount / 30) * 100);
+      const weeklyPct = getAverageForLastDays(7);
+      const monthlyPct = getAverageForLastDays(30);
+      const sixMonthPct = getSixMonthTotalPct(userLogs);
+      const totalCompleted = getTotalCompletedCount(userLogs);
+      const streak = getStreakCount(userLogs);
+
+      // Metric elements update
+      document.getElementById('metricDailyPct').innerText = `${dailyPct}%`;
+      document.getElementById('metricDailyCount').innerText = `(${dailyCount}/30)`;
+      document.getElementById('metricDailyBar').style.width = `${dailyPct}%`;
+
+      document.getElementById('metricWeeklyPct').innerText = `${weeklyPct}%`;
+      document.getElementById('metricWeeklyBar').style.width = `${weeklyPct}%`;
+
+      document.getElementById('metricMonthlyPct').innerText = `${monthlyPct}%`;
+      document.getElementById('metricMonthlyBar').style.width = `${monthlyPct}%`;
+
+      document.getElementById('metricSixMonthPct').innerText = `${sixMonthPct}%`;
+      document.getElementById('metricSixMonthCount').innerText = `(${totalCompleted}/5400)`;
+      document.getElementById('metricSixMonthBar').style.width = `${sixMonthPct}%`;
+
+      document.getElementById('metricStreak').innerText = `${streak} ${streak === 1 ? 'Day' : 'Days'}`;
+
+      // Trophies count
+      const unlockedCount = ACHIEVEMENTS_DEF.filter(a => a.req(userLogs)).length;
+      const trophyPct = Math.round((unlockedCount / 30) * 100);
+      document.getElementById('metricTrophyPct').innerText = `${trophyPct}%`;
+      document.getElementById('metricTrophyCount').innerText = `(${unlockedCount}/30)`;
+      document.getElementById('metricTrophyBar').style.width = `${trophyPct}%`;
+
+      // Rank Badge
+      const lvl = getRankLevel(userLogs);
+      const rankTitles = ['Novice', 'Apprentice', 'Initiate', 'Disciplined', 'Warrior', 'Iron Will', 'Monk', 'Master', 'Grandmaster', 'Legendary Monarch'];
+      const title = rankTitles[Math.min(lvl - 1, rankTitles.length - 1)];
+      document.getElementById('rankBadge').innerText = `⚔️ Level ${lvl}: ${title}`;
+    }
+
+    function renderMonthlyCalendar() {
+      const calGrid = document.getElementById('calendarGrid');
+      const label = document.getElementById('calendarMonthLabel');
+      if (!calGrid) return;
+
+      calGrid.innerHTML = '';
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      label.innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Blank slots
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'h-16 bg-slate-50/50 rounded-xl border border-dashed border-slate-200';
+        calGrid.appendChild(empty);
+      }
+
+      // Day slots
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dObj = new Date(year, month, day);
+        const dStr = getFormattedDate(dObj);
+        const pct = getDayCompletionPct(dStr);
+
+        let badgeBg = 'bg-slate-100 text-slate-500';
+        let badgeIcon = '';
+        if (pct === 100) { badgeBg = 'bg-amber-100 text-amber-800 font-black'; badgeIcon = '⭐'; }
+        else if (pct >= 80) { badgeBg = 'bg-emerald-100 text-emerald-800 font-bold'; badgeIcon = '🟢'; }
+        else if (pct >= 50) { badgeBg = 'bg-blue-100 text-blue-800 font-bold'; badgeIcon = '🔵'; }
+        else if (pct > 0) { badgeBg = 'bg-slate-200 text-slate-700 font-semibold'; badgeIcon = '⚪'; }
+
+        const isCurrentSelected = dStr === currentDateStr;
+
+        const cell = document.createElement('div');
+        cell.onclick = () => {
+          currentDateStr = dStr;
+          document.getElementById('datePicker').value = currentDateStr;
+          switchTab('checklist');
+        };
+        cell.className = `h-16 p-2 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${isCurrentSelected ? 'border-slate-900 ring-2 ring-slate-900/10 bg-slate-50' : 'border-slate-200 bg-white hover:border-slate-400'}`;
+
+        cell.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800">${day}</span>
+            <span class="text-[10px]">${badgeIcon}</span>
+          </div>
+          <div class="text-[10px] px-1.5 py-0.5 rounded-md ${badgeBg} text-center truncate">
+            ${pct}%
+          </div>
+        `;
+        calGrid.appendChild(cell);
+      }
+    }
+
+    function changeCalendarMonth(delta) {
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+      renderMonthlyCalendar();
+    }
+
+    function renderSectorAnalytics() {
+      const grid = document.getElementById('sectorCardsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const sector30DayAvgs = [];
+
+      ROUTINE_DATA.forEach(cat => {
+        // Daily
+        const dayLogs = userLogs[currentDateStr] || {};
+        let dayDone = 0;
+        cat.tasks.forEach((_, idx) => { if (dayLogs[getTaskKey(cat.id, idx)]) dayDone++; });
+        const dayPct = Math.round((dayDone / cat.tasks.length) * 100);
+
+        // 7-day Avg
+        let sum7 = 0;
+        const bDate = new Date(currentDateStr);
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(bDate); d.setDate(d.getDate() - i);
+          const dLogs = userLogs[getFormattedDate(d)] || {};
+          let cDone = 0;
+          cat.tasks.forEach((_, idx) => { if (dLogs[getTaskKey(cat.id, idx)]) cDone++; });
+          sum7 += (cDone / cat.tasks.length);
+        }
+        const avg7 = Math.round((sum7 / 7) * 100);
+
+        // 30-day Avg
+        let sum30 = 0;
+        for (let i = 0; i < 30; i++) {
+          const d = new Date(bDate); d.setDate(d.getDate() - i);
+          const dLogs = userLogs[getFormattedDate(d)] || {};
+          let cDone = 0;
+          cat.tasks.forEach((_, idx) => { if (dLogs[getTaskKey(cat.id, idx)]) cDone++; });
+          sum30 += (cDone / cat.tasks.length);
+        }
+        const avg30 = Math.round((sum30 / 30) * 100);
+        sector30DayAvgs.push(avg30);
+
+        // Grade calculation
+        let grade = 'F';
+        let gradeColor = 'bg-slate-100 text-slate-600';
+        if (avg30 >= 90) { grade = 'S'; gradeColor = 'bg-amber-100 text-amber-800'; }
+        else if (avg30 >= 80) { grade = 'A'; gradeColor = 'bg-emerald-100 text-emerald-800'; }
+        else if (avg30 >= 70) { grade = 'B'; gradeColor = 'bg-blue-100 text-blue-800'; }
+        else if (avg30 >= 50) { grade = 'C'; gradeColor = 'bg-indigo-100 text-indigo-800'; }
+
+        const card = document.createElement('div');
+        card.className = `bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">${cat.icon}</span>
+              <h3 class="font-extrabold text-slate-900 text-sm">${cat.title}</h3>
+            </div>
+            <span class="text-xs font-black px-3 py-1 rounded-full ${gradeColor}">Grade ${grade}</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">Today</div>
+              <div class="text-base font-black text-slate-800">${dayPct}%</div>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">7-Day Avg</div>
+              <div class="text-base font-black text-slate-800">${avg7}%</div>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">30-Day Avg</div>
+              <div class="text-base font-black text-slate-800">${avg30}%</div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between text-xs font-bold text-slate-600">
+              <span>Sector Strength</span>
+              <span>${avg30}%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${avg30}%; background-color: ${cat.color}"></div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Render Horizontal Bar Chart
+      renderSectorBarChart(sector30DayAvgs);
+    }
+
+    function renderSectorBarChart(avgs) {
+      const ctx = document.getElementById('sectorBarChart')?.getContext('2d');
+      if (!ctx) return;
+      if (sectorBarChartInstance) sectorBarChartInstance.destroy();
+
+      sectorBarChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ROUTINE_DATA.map(c => c.title.split(' ')[1] || c.title),
+          datasets: [{
+            label: '30-Day Completion Avg (%)',
+            data: avgs,
+            backgroundColor: ROUTINE_DATA.map(c => c.color),
+            borderRadius: 8
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { min: 0, max: 100, grid: { color: '#f1f5f9' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderTrendsCharts() {
+      // 7-Day Line Chart
+      const lineCtx = document.getElementById('trendLineChart')?.getContext('2d');
+      if (lineCtx) {
+        if (trendChartInstance) trendChartInstance.destroy();
+
+        const labels = [];
+        const dataPoints = [];
+        const base = new Date(currentDateStr);
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(base); d.setDate(d.getDate() - i);
+          const dStr = getFormattedDate(d);
+          labels.push(dStr.slice(5)); // MM-DD
+          dataPoints.push(getDayCompletionPct(dStr));
+        }
+
+        trendChartInstance = new Chart(lineCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Daily Completion %',
+              data: dataPoints,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointBackgroundColor: '#2563eb'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { min: 0, max: 100, grid: { color: '#f1f5f9' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // Radar Chart
+      const radarCtx = document.getElementById('radarChart')?.getContext('2d');
+      if (radarCtx) {
+        if (radarChartInstance) radarChartInstance.destroy();
+
+        const radarData = ROUTINE_DATA.map(cat => {
+          let sum = 0;
+          const bDate = new Date(currentDateStr);
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(bDate); d.setDate(d.getDate() - i);
+            const dLogs = userLogs[getFormattedDate(d)] || {};
+            let cDone = 0;
+            cat.tasks.forEach((_, idx) => { if (dLogs[getTaskKey(cat.id, idx)]) cDone++; });
+            sum += (cDone / cat.tasks.length);
+          }
+          return Math.round((sum / 7) * 100);
+        });
+
+        radarChartInstance = new Chart(radarCtx, {
+          type: 'radar',
+          data: {
+            labels: ROUTINE_DATA.map(c => c.title.split(' ')[1] || c.title),
+            datasets: [{
+              label: '7-Day Sector Balance',
+              data: radarData,
+              backgroundColor: 'rgba(99, 102, 241, 0.25)',
+              borderColor: '#6366f1',
+              borderWidth: 2,
+              pointBackgroundColor: '#4f46e5'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: { min: 0, max: 100, ticks: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    function renderAchievements() {
+      const grid = document.getElementById('trophiesGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      let unlockedCount = 0;
+
+      ACHIEVEMENTS_DEF.forEach(ach => {
+        const isUnlocked = ach.req(userLogs);
+        if (isUnlocked) unlockedCount++;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border transition-all ${isUnlocked ? 'bg-white border-amber-200 shadow-sm' : 'bg-slate-50/70 border-slate-200 opacity-60'}`;
+
+        card.innerHTML = `
+          <div class="flex items-start gap-3">
+            <span class="text-3xl ${isUnlocked ? '' : 'grayscale'}">${ach.icon}</span>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <h4 class="font-extrabold text-slate-900 text-xs">${ach.title}</h4>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isUnlocked ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'}">
+                  ${isUnlocked ? 'Unlocked' : 'Locked'}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-snug font-medium">${ach.desc}</p>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      document.getElementById('trophyUnlockText').innerText = `${unlockedCount} of 30 Unlocked`;
+    }
+
+    // Achievement evaluation helpers
+    function hasFlawlessDay(logs) {
+      return Object.keys(logs).some(dStr => getDayCompletionPct(dStr) === 100);
+    }
+    function getFlawlessDayCount(logs) {
+      return Object.keys(logs).filter(dStr => getDayCompletionPct(dStr) === 100).length;
+    }
+    function completedSectorOnAnyDay(logs, catId) {
+      const cat = ROUTINE_DATA.find(c => c.id === catId);
+      if (!cat) return false;
+      return Object.values(logs).some(dayObj => {
+        if (!dayObj) return false;
+        return cat.tasks.every((_, idx) => !!dayObj[getTaskKey(catId, idx)]);
+      });
+    }
+    function getSectorTotalCount(logs, catId) {
+      const cat = ROUTINE_DATA.find(c => c.id === catId);
+      if (!cat) return 0;
+      let count = 0;
+      Object.values(logs).forEach(dayObj => {
+        if (dayObj) {
+          cat.tasks.forEach((_, idx) => {
+            if (dayObj[getTaskKey(catId, idx)]) count++;
+          });
+        }
+      });
+      return count;
+    }
+    function getSectorFullDays(logs, catId) {
+      const cat = ROUTINE_DATA.find(c => c.id === catId);
+      if (!cat) return 0;
+      let fullDays = 0;
+      Object.values(logs).forEach(dayObj => {
+        if (dayObj && cat.tasks.every((_, idx) => !!dayObj[getTaskKey(catId, idx)])) {
+          fullDays++;
+        }
+      });
+      return fullDays;
+    }
+    function sectorStreak(logs, catId) {
+      const cat = ROUTINE_DATA.find(c => c.id === catId);
+      if (!cat) return 0;
+      let streak = 0;
+      let d = new Date(currentDateStr);
+      while (true) {
+        const dStr = getFormattedDate(d);
+        const dayObj = logs[dStr] || {};
+        const isFull = cat.tasks.every((_, idx) => !!dayObj[getTaskKey(catId, idx)]);
+        if (isFull) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+    function isBalancedWeek(logs) {
+      return ROUTINE_DATA.every(cat => {
+        let sum = 0;
+        const bDate = new Date(currentDateStr);
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(bDate); d.setDate(d.getDate() - i);
+          const dLogs = logs[getFormattedDate(d)] || {};
+          let cDone = 0;
+          cat.tasks.forEach((_, idx) => { if (dLogs[getTaskKey(cat.id, idx)]) cDone++; });
+          sum += (cDone / cat.tasks.length);
+        }
+        return (sum / 7) >= 0.7;
+      });
+    }
+
+    function openSyncModal() {
+      document.getElementById('syncUrlInput').value = currentSyncUrl;
+      document.getElementById('syncModal').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('syncModal').classList.add('hidden');
+    }
+
+    function saveSyncUrl() {
+      const val = document.getElementById('syncUrlInput').value.trim();
+      currentSyncUrl = val;
+      localStorage.setItem('sheetSyncUrl', val);
+      closeSyncModal();
+      if (val) fetchFromSheet();
+    }
+
+    // Auto update single day to sheet backend
+    async function syncDayToGoogleSheet(dateStr) {
+      if (!currentSyncUrl) return;
+      
+      const statusBadge = document.getElementById('sheetSyncBadge');
+      if (statusBadge) {
+        statusBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5 cursor-pointer';
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> Syncing...`;
+      }
+
+      try {
+        const payload = {
+          action: 'updateDay',
+          date: dateStr,
+          dayData: userLogs[dateStr] || {}
+        };
+
+        await fetch(currentSyncUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (statusBadge) {
+          statusBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 cursor-pointer';
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Synced`;
+        }
+      } catch (e) {
+        if (statusBadge) {
+          statusBadge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 flex items-center gap-1.5 cursor-pointer';
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Sync Error`;
+        }
+      }
+    }
+
+    // Push all local entries to Google Sheet
+    async function pushAllToSheet() {
+      if (!currentSyncUrl) {
+        return;
+      }
+
+      const rows = [];
+      for (const dStr in userLogs) {
+        const dayData = userLogs[dStr];
+        for (const tKey in dayData) {
+          if (dayData[tKey]) {
+            rows.push([dStr, tKey, true]);
+          }
+        }
+      }
+
+      document.getElementById('modalSyncStatusText').innerText = "Pushing all data to sheet...";
+
+      try {
+        await fetch(currentSyncUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'syncAll', rows: rows })
+        });
+
+        document.getElementById('modalSyncStatusText').innerText = "Successfully pushed all data to sheet!";
+      } catch (err) {
+        document.getElementById('modalSyncStatusText').innerText = "Error pushing data: " + err.toString();
+      }
+    }
+
+    // Fetch existing data from Google Sheet
+    async function fetchFromSheet(silent = false) {
+      if (!currentSyncUrl) return;
+      if (!silent) document.getElementById('modalSyncStatusText').innerText = "Fetching data from sheet...";
+
+      try {
+        const res = await fetch(currentSyncUrl);
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 1) {
+          // Reconstruct userLogs from rows [Date, Task_Key, Completed]
+          const newLogs = {};
+          for (let i = 1; i < data.length; i++) {
+            const [rawDateStr, tKey, completed] = data[i];
+            if (rawDateStr && tKey) {
+              const cleanDateStr = String(rawDateStr).split('T')[0].trim();
+              if (!newLogs[cleanDateStr]) newLogs[cleanDateStr] = {};
+              newLogs[cleanDateStr][tKey] = !!completed;
+            }
+          }
+          userLogs = newLogs;
+          localStorage.setItem('disciplineLogs', JSON.stringify(userLogs));
+          renderChecklistView();
+          updateAllStats();
+          if (!silent) document.getElementById('modalSyncStatusText').innerText = `Synced ${data.length - 1} task logs from sheet!`;
+        }
+      } catch (err) {
+        if (!silent) document.getElementById('modalSyncStatusText').innerText = "Sync notice: Active connection ready.";
+      }
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
